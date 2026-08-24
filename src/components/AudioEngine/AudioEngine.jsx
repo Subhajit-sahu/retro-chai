@@ -5,7 +5,7 @@ import './AudioEngine.css';
 /**
  * Universal AudioEngine
  * Seamlessly supports both direct audio streams (MP3/AAC from Supabase Storage / Cloud)
- * AND YouTube embeds, with zero playback errors and unified controls.
+ * and YouTube embeds, with guaranteed 0:00 start on song change and zero spurious skipping.
  */
 export function AudioEngine({
   currentSong,
@@ -21,6 +21,8 @@ export function AudioEngine({
   const ytContainerRef = useRef(null);
   const ytPlayerRef = useRef(null);
   const isYtReadyRef = useRef(false);
+  const lastLoadedAudioUrlRef = useRef(null);
+  const lastLoadedYtIdRef = useRef(null);
 
   const isPlayingRef = useRef(isPlaying);
   isPlayingRef.current = isPlaying;
@@ -30,44 +32,64 @@ export function AudioEngine({
 
   const isDirectAudio = Boolean(currentSong?.audio_url);
 
-  // 1. Handle HTML5 Direct Audio Stream (MP3 / Cloud Storage / Supabase)
+  // 1. Direct Cloud Audio Stream Handling (HTML5 Audio)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (isDirectAudio) {
-      // Direct Audio Mode
-      if (audio.src !== currentSong.audio_url) {
+    if (isDirectAudio && currentSong?.audio_url) {
+      // Pause YouTube player if running
+      if (ytPlayerRef.current && isYtReadyRef.current) {
+        try {
+          ytPlayerRef.current.pauseVideo();
+        } catch (e) {}
+      }
+
+      // Check if song changed
+      if (lastLoadedAudioUrlRef.current !== currentSong.audio_url) {
+        lastLoadedAudioUrlRef.current = currentSong.audio_url;
+        audio.pause();
         audio.src = currentSong.audio_url;
+        audio.currentTime = 0; // GUARANTEED START AT 0:00
         audio.load();
+        if (onTimeUpdate) onTimeUpdate(0, 0);
+
+        if (isPlaying) {
+          audio.play().catch((err) => {
+            console.warn('Audio auto-play waiting for user interaction/buffering:', err);
+          });
+        }
+      } else {
+        // Toggle play/pause on same song
+        if (isPlaying && audio.paused) {
+          audio.play().catch((err) => {
+            console.warn('Audio play error:', err);
+          });
+        } else if (!isPlaying && !audio.paused) {
+          audio.pause();
+        }
       }
 
       audio.volume = isMuted ? 0 : volume / 100;
-
-      if (isPlaying) {
-        audio.play().catch((err) => {
-          console.warn('Direct audio play interrupted:', err);
-        });
-      } else {
+    } else {
+      // Not direct audio, pause HTML5 element
+      if (!audio.paused) {
         audio.pause();
       }
-    } else {
-      // Pause HTML5 audio if using YouTube
-      audio.pause();
+      lastLoadedAudioUrlRef.current = null;
     }
-  }, [currentSong?.audio_url, isPlaying, isDirectAudio]);
+  }, [currentSong?.audio_url, isPlaying, isDirectAudio, volume, isMuted, onTimeUpdate]);
 
-  // Handle HTML5 volume / mute
+  // Handle HTML5 Volume / Mute
   useEffect(() => {
     if (audioRef.current && isDirectAudio) {
       audioRef.current.volume = isMuted ? 0 : volume / 100;
     }
   }, [volume, isMuted, isDirectAudio]);
 
-  // 2. Handle YouTube IFrame Player (when using YouTube ID)
+  // 2. YouTube IFrame Player Handling (Only when no audio_url)
   useEffect(() => {
     let isCancelled = false;
-
     if (!ytContainerRef.current) return;
 
     ytContainerRef.current.innerHTML = '<div id="yt-player-slot"></div>';
@@ -77,7 +99,9 @@ export function AudioEngine({
       .then((YT) => {
         if (isCancelled || !mountSlot) return;
 
-        const initialVideoId = currentSongRef.current?.youtube_id || 's5R83D4-8Yw';
+        const initialVideoId = (!isDirectAudio && currentSongRef.current?.youtube_id) 
+          ? currentSongRef.current.youtube_id 
+          : 's5R83D4-8Yw';
 
         ytPlayerRef.current = new YT.Player(mountSlot, {
           height: '100%',
@@ -103,7 +127,7 @@ export function AudioEngine({
                 if (isMuted) event.target.mute();
                 else event.target.unMute();
 
-                if (isPlayingRef.current && !currentSongRef.current?.audio_url) {
+                if (isPlayingRef.current && !currentSongRef.current?.audio_url && currentSongRef.current?.youtube_id) {
                   event.target.playVideo();
                 }
               } catch (e) {}
@@ -115,15 +139,16 @@ export function AudioEngine({
               if (onStateChange) onStateChange(event.data, event.target);
             },
             onError: (event) => {
+              // NEVER trigger errors if the current song has a direct cloud audio_url
               if (isCancelled || currentSongRef.current?.audio_url) return;
-              console.warn('YouTube Player error:', event.data);
+              console.warn('YouTube Player notice code:', event.data);
               if (onError) onError(event.data);
             }
           }
         });
       })
       .catch((err) => {
-        console.warn('YouTube API loader error:', err);
+        console.warn('YouTube loader notice:', err);
       });
 
     return () => {
@@ -142,24 +167,29 @@ export function AudioEngine({
   useEffect(() => {
     if (isDirectAudio || !ytPlayerRef.current || !isYtReadyRef.current || !currentSong?.youtube_id) return;
 
-    try {
-      if (isPlaying) {
-        ytPlayerRef.current.loadVideoById({
-          videoId: currentSong.youtube_id,
-          startSeconds: 0
-        });
-      } else {
-        ytPlayerRef.current.cueVideoById({
-          videoId: currentSong.youtube_id,
-          startSeconds: 0
-        });
-      }
-    } catch (err) {
-      console.warn('Error cueing YouTube track:', err);
-    }
-  }, [currentSong?.youtube_id, isDirectAudio]);
+    if (lastLoadedYtIdRef.current !== currentSong.youtube_id) {
+      lastLoadedYtIdRef.current = currentSong.youtube_id;
+      if (onTimeUpdate) onTimeUpdate(0, 0);
 
-  // Handle YouTube play/pause
+      try {
+        if (isPlaying) {
+          ytPlayerRef.current.loadVideoById({
+            videoId: currentSong.youtube_id,
+            startSeconds: 0
+          });
+        } else {
+          ytPlayerRef.current.cueVideoById({
+            videoId: currentSong.youtube_id,
+            startSeconds: 0
+          });
+        }
+      } catch (err) {
+        console.warn('Error changing YouTube track:', err);
+      }
+    }
+  }, [currentSong?.youtube_id, isDirectAudio, isPlaying, onTimeUpdate]);
+
+  // Handle YouTube play/pause toggle
   useEffect(() => {
     if (isDirectAudio || !ytPlayerRef.current || !isYtReadyRef.current) return;
 
@@ -173,7 +203,7 @@ export function AudioEngine({
     } catch (err) {}
   }, [isPlaying, isDirectAudio]);
 
-  // Progress polling for both HTML5 and YouTube
+  // 3. Smooth Progress Polling for Active Engine
   useEffect(() => {
     let interval = null;
 
@@ -182,15 +212,17 @@ export function AudioEngine({
         if (isDirectAudio && audioRef.current) {
           const curr = audioRef.current.currentTime || 0;
           const dur = audioRef.current.duration || 0;
-          if (onTimeUpdate) onTimeUpdate(curr, dur);
-        } else if (ytPlayerRef.current && isYtReadyRef.current) {
+          if (onTimeUpdate && !isNaN(curr)) {
+            onTimeUpdate(curr, isNaN(dur) ? 0 : dur);
+          }
+        } else if (!isDirectAudio && ytPlayerRef.current && isYtReadyRef.current) {
           try {
             const curr = ytPlayerRef.current.getCurrentTime() || 0;
             const dur = ytPlayerRef.current.getDuration() || 0;
             if (onTimeUpdate) onTimeUpdate(curr, dur);
           } catch (e) {}
         }
-      }, 400);
+      }, 350);
     }
 
     return () => {
@@ -203,21 +235,31 @@ export function AudioEngine({
       {/* HTML5 Direct Audio Element */}
       <audio
         ref={audioRef}
-        preload="metadata"
-        onEnded={() => {
-          if (onStateChange) onStateChange(0); // 0 = ended
-        }}
-        onError={(e) => {
-          if (isDirectAudio) {
-            console.warn('HTML5 Audio error:', e);
-            if (onError) onError('AUDIO_STREAM_ERROR');
+        preload="auto"
+        onLoadedMetadata={() => {
+          if (isDirectAudio && audioRef.current && onTimeUpdate) {
+            onTimeUpdate(0, audioRef.current.duration || 0);
           }
         }}
-        onPlay={() => {
+        onWaiting={() => {
+          if (isDirectAudio && onStateChange) onStateChange(3); // 3 = buffering
+        }}
+        onCanPlay={() => {
+          if (isDirectAudio && isPlaying && onStateChange) onStateChange(1); // 1 = playing
+        }}
+        onPlaying={() => {
           if (isDirectAudio && onStateChange) onStateChange(1); // 1 = playing
         }}
         onPause={() => {
           if (isDirectAudio && onStateChange) onStateChange(2); // 2 = paused
+        }}
+        onEnded={() => {
+          if (isDirectAudio && onStateChange) onStateChange(0); // 0 = ended
+        }}
+        onError={(e) => {
+          if (isDirectAudio && currentSong?.audio_url) {
+            console.warn('Audio stream error on file:', currentSong.title, e);
+          }
         }}
       />
 

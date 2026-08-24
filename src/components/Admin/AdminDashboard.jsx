@@ -439,7 +439,7 @@ VALUES ('${user.id}');`}
                       <th style={{ width: '50px' }}>Art</th>
                       <th>Title & Artist</th>
                       <th>Year</th>
-                      <th>YouTube ID</th>
+                      <th>Audio Source</th>
                       <th>Status</th>
                       <th style={{ textAlign: 'right' }}>Actions</th>
                     </tr>
@@ -447,7 +447,7 @@ VALUES ('${user.id}');`}
                   <tbody>
                     {adminSongs.map((song, idx) => (
                       <tr key={song.id} className={song.is_active ? '' : 'row-inactive'}>
-                        <td className="col-idx">{song.sort_order || idx + 1}</td>
+                        <td className="col-idx">{idx + 1}</td>
                         <td>
                           <img
                             src={song.artwork_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80'}
@@ -461,7 +461,11 @@ VALUES ('${user.id}');`}
                         </td>
                         <td>{song.year || '—'}</td>
                         <td>
-                          <code className="yt-id-tag">{song.youtube_id}</code>
+                          {song.audio_url ? (
+                            <span className="cloud-audio-tag" title={song.audio_url}>☁ Cloud MP3</span>
+                          ) : (
+                            <code className="yt-id-tag">{song.youtube_id || '—'}</code>
+                          )}
                         </td>
                         <td>
                           <button

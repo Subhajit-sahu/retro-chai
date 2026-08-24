@@ -528,12 +528,118 @@
   gap: 12px;
 }
 
+.cloud-audio-tag {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .sub-modal-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+
+/* ==============================================================================
+   Mobile Responsiveness for Admin Panel
+   ============================================================================== */
+@media (max-width: 768px) {
+  .admin-modal-backdrop {
+    padding: 0;
+    align-items: flex-start;
+  }
+
+  .admin-modal-sheet {
+    width: 100vw;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    padding: 16px 14px 32px;
+    overflow-y: auto;
+  }
+
+  .admin-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .admin-header h2 {
+    font-size: 1.15rem;
+  }
+
+  .admin-panel-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .catalogue-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .stats-pill {
+    text-align: center;
+    padding: 8px 10px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+
+  .admin-top-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .admin-add-song-btn {
+    text-align: center;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .admin-logout-btn-small {
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    border-radius: 8px;
+  }
+
+  .admin-songs-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+  }
+
+  .admin-songs-table {
+    min-width: 520px;
+  }
+
+  .admin-songs-table th,
+  .admin-songs-table td {
+    padding: 8px 10px;
+  }
+
+  .sub-modal-backdrop {
+    padding: 12px;
+  }
+
+  .sub-modal-sheet {
+    padding: 18px 16px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
 }
 
 .cancel-btn {

@@ -61,8 +61,27 @@ export function useMusicPlayer(songs = []) {
     }
     setCurrentIndex(targetIndex);
     setCurrentTime(0);
+    setDuration(0);
     setIsPlaying(true);
+    setIsBuffering(true);
     setPlayerError(null);
+  }, []);
+
+  const seek = useCallback((targetSeconds) => {
+    setCurrentTime(targetSeconds);
+    // 1. If HTML5 Audio element is active
+    const audioEl = document.querySelector('audio');
+    if (audioEl && audioEl.src) {
+      try {
+        audioEl.currentTime = targetSeconds;
+      } catch (e) {}
+    }
+    // 2. If YouTube player is active
+    if (playerInstanceRef.current && typeof playerInstanceRef.current.seekTo === 'function') {
+      try {
+        playerInstanceRef.current.seekTo(targetSeconds, true);
+      } catch (e) {}
+    }
   }, []);
 
   const next = useCallback(() => {
@@ -79,7 +98,9 @@ export function useMusicPlayer(songs = []) {
       setCurrentIndex((prev) => (prev + 1) % list.length);
     }
     setCurrentTime(0);
+    setDuration(0);
     setIsPlaying(true);
+    setIsBuffering(true);
     setPlayerError(null);
   }, [currentIndex, isShuffle]);
 
@@ -103,26 +124,11 @@ export function useMusicPlayer(songs = []) {
       setCurrentIndex((prev) => (prev - 1 + list.length) % list.length);
     }
     setCurrentTime(0);
+    setDuration(0);
     setIsPlaying(true);
+    setIsBuffering(true);
     setPlayerError(null);
-  }, [currentTime, currentIndex, isShuffle]);
-
-  const seek = useCallback((targetSeconds) => {
-    setCurrentTime(targetSeconds);
-    // 1. If HTML5 Audio element is active
-    const audioEl = document.querySelector('audio');
-    if (audioEl && audioEl.src) {
-      try {
-        audioEl.currentTime = targetSeconds;
-      } catch (e) {}
-    }
-    // 2. If YouTube player is active
-    if (playerInstanceRef.current && typeof playerInstanceRef.current.seekTo === 'function') {
-      try {
-        playerInstanceRef.current.seekTo(targetSeconds, true);
-      } catch (e) {}
-    }
-  }, []);
+  }, [currentTime, currentIndex, isShuffle, seek]);
 
   const handleVolumeChange = useCallback((newVol) => {
     const val = Math.max(0, Math.min(100, newVol));
@@ -179,13 +185,12 @@ export function useMusicPlayer(songs = []) {
   }, [repeatMode, currentIndex, next, seek]);
 
   const onError = useCallback((errorCode) => {
-    console.warn('Playback error encountered:', errorCode);
-    setPlayerError(`Playback error (${errorCode}). Trying next track...`);
+    console.warn('Playback notice:', errorCode);
+    setPlayerError(`Playback notice (${errorCode})`);
     setTimeout(() => {
       setPlayerError(null);
-      next();
-    }, 2500);
-  }, [next]);
+    }, 3000);
+  }, []);
 
   return {
     currentSong,
