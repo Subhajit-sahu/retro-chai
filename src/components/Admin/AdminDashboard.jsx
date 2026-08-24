@@ -305,8 +305,15 @@ export function AdminDashboard({ isOpen, onClose, onSongsUpdated }) {
             <div className="admin-login-card">
               <h3>Owner Authentication</h3>
               <p className="login-desc">
-                Sign in with your Supabase credentials. Only user accounts listed in the{' '}
-                <code>admin_users</code> table have write authorization via database RLS.
+                Sign in to manage the Chai Adda playlist, add cloud audio streams, and configure station links. Curated & crafted by{' '}
+                <a
+                  href="https://www.linkedin.com/in/subhajitsahu/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="creator-link"
+                >
+                  Subhajit Sahu
+                </a>.
               </p>
               {authError && <div className="admin-auth-error">{authError}</div>}
               <form onSubmit={handleLogin} className="admin-auth-form">

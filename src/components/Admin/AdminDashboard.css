@@ -120,6 +120,19 @@
   line-height: 1.5;
 }
 
+.creator-link {
+  color: var(--accent-amber-light);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+
+.creator-link:hover {
+  color: #fff;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+
 .sub-note {
   font-size: 0.78rem !important;
   color: var(--text-subtle) !important;

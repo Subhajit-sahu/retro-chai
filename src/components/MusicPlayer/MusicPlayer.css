@@ -290,32 +290,57 @@
 /* Volume Popover */
 .volume-control-wrapper {
   position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
 .volume-slider-popover {
   position: absolute;
-  bottom: 42px;
+  bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 10px 8px;
-  background: var(--bg-surface-elevated);
+  padding: 10px 8px 12px;
+  background: rgba(28, 17, 12, 0.95);
   backdrop-filter: var(--backdrop-blur);
   -webkit-backdrop-filter: var(--backdrop-blur);
   border: 1px solid var(--border-glass);
   border-radius: 9999px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 50;
-  height: 100px;
+  height: 108px;
+  animation: volumePopIn 0.15s ease-out;
+}
+
+/* Invisible bridge so mouse never loses hover target when moving between icon and slider */
+.volume-slider-popover::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: -15px;
+  right: -15px;
+  height: 20px;
+  pointer-events: auto;
+}
+
+@keyframes volumePopIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
 
 .volume-range-input {
   writing-mode: vertical-lr;
   direction: rtl;
-  width: 5px;
-  height: 75px;
+  width: 6px;
+  height: 80px;
   accent-color: var(--accent-amber);
   cursor: pointer;
 }

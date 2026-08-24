@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { formatTime } from '../../lib/youtube';
 import './MusicPlayer.css';
 
@@ -34,6 +34,48 @@ export function MusicPlayer({
   const [seekPreviewTime, setSeekPreviewTime] = useState(0);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const progressBarRef = useRef(null);
+  const volumeWrapperRef = useRef(null);
+  const volumeTimeoutRef = useRef(null);
+
+  const handleVolumeMouseEnter = () => {
+    if (volumeTimeoutRef.current) {
+      clearTimeout(volumeTimeoutRef.current);
+      volumeTimeoutRef.current = null;
+    }
+    setShowVolumeSlider(true);
+  };
+
+  const handleVolumeMouseLeave = () => {
+    if (volumeTimeoutRef.current) {
+      clearTimeout(volumeTimeoutRef.current);
+    }
+    volumeTimeoutRef.current = setTimeout(() => {
+      setShowVolumeSlider(false);
+    }, 350);
+  };
+
+  const handleVolumeBtnClick = (e) => {
+    e.stopPropagation();
+    setShowVolumeSlider((prev) => !prev);
+  };
+
+  // Close volume popover when clicking anywhere outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (volumeWrapperRef.current && !volumeWrapperRef.current.contains(e.target)) {
+        setShowVolumeSlider(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+      if (volumeTimeoutRef.current) {
+        clearTimeout(volumeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const effectiveTime = isSeeking ? seekPreviewTime : currentTime;
   const progressPercent = duration > 0 ? (effectiveTime / duration) * 100 : 0;
@@ -256,15 +298,16 @@ export function MusicPlayer({
 
           {/* Volume Trigger / Popover */}
           <div 
+            ref={volumeWrapperRef}
             className="volume-control-wrapper"
-            onMouseEnter={() => setShowVolumeSlider(true)}
-            onMouseLeave={() => setShowVolumeSlider(false)}
+            onMouseEnter={handleVolumeMouseEnter}
+            onMouseLeave={handleVolumeMouseLeave}
           >
             <button
               type="button"
-              onClick={toggleMute}
+              onClick={handleVolumeBtnClick}
               className="control-btn volume-btn"
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
+              aria-label={isMuted ? 'Unmute' : `Volume ${volume}%`}
               title={isMuted ? 'Unmute' : `Volume ${volume}%`}
             >
               {isMuted || volume === 0 ? (
