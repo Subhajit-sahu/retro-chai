@@ -1,0 +1,97 @@
+.live-counter-pill {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  background: var(--bg-surface-glass);
+  backdrop-filter: var(--backdrop-blur);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: 9999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  user-select: none;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.live-counter-pill:hover {
+  border-color: var(--border-glass-hover);
+  background: var(--bg-surface-glass-hover);
+}
+
+.live-pulse-dot-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 9px;
+  height: 9px;
+}
+
+.live-pulse-radar {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+}
+
+.live-pulse-radar.active {
+  background-color: var(--live-green);
+  animation: radarPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.live-pulse-radar.idle {
+  background-color: var(--text-subtle);
+  opacity: 0.5;
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  z-index: 2;
+}
+
+.live-pulse-dot.active {
+  background-color: var(--live-green);
+  box-shadow: 0 0 8px var(--live-green-glow);
+}
+
+.live-pulse-dot.idle {
+  background-color: var(--text-subtle);
+}
+
+.live-counter-number {
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+  text-shadow: var(--shadow-text-subtle);
+}
+
+.live-counter-label {
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-shadow: var(--shadow-text-subtle);
+}
+
+@media (max-width: 768px) {
+  .live-counter-pill {
+    top: 18px;
+    padding: 5px 11px;
+    gap: 6px;
+  }
+  .live-counter-number {
+    font-size: 0.8rem;
+  }
+  .live-counter-label {
+    font-size: 0.78rem;
+  }
+}
