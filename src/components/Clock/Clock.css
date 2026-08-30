@@ -17,6 +17,29 @@
   text-shadow: var(--shadow-text);
   font-variant-numeric: tabular-nums;
   opacity: 0.92;
+  display: inline-flex;
+  align-items: center;
+}
+
+.clock-colon {
+  display: inline-block;
+  margin: 0 1px;
+  animation: clockColonBlink 1s infinite steps(1, start);
+}
+
+@keyframes clockColonBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
+.clock-ampm {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  margin-left: 3px;
 }
 
 @media (max-width: 768px) {
@@ -26,5 +49,8 @@
   }
   .clock-time {
     font-size: 0.84rem;
+  }
+  .clock-ampm {
+    font-size: 0.72rem;
   }
 }

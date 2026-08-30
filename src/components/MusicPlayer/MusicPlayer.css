@@ -369,35 +369,95 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .music-player-wrapper {
+    bottom: 14px;
+    padding: 0 6px;
+  }
+
   .player-capsule {
-    padding: 8px 12px 8px 10px;
+    padding: 6px 10px;
     gap: 10px;
+    width: min(560px, 96vw);
+    max-width: 96vw;
   }
+
   .player-art-container {
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
   }
+
+  .player-track-info {
+    min-width: 0;
+  }
+
   .track-title {
-    font-size: 0.86rem;
+    font-size: 0.82rem;
   }
+
   .track-artist {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
   }
-  .secondary-btn,
+
+  .time-text {
+    font-size: 0.68rem;
+  }
+
+  .player-controls-cluster {
+    gap: 2px;
+  }
+
+  /* Volume hidden on mobile as phone hardware volume buttons control audio level */
   .volume-control-wrapper {
     display: none;
   }
-  .play-btn {
-    width: 38px;
-    height: 38px;
+
+  /* Shuffle & Repeat controls visible on mobile */
+  .secondary-btn {
+    display: inline-flex;
+    width: 26px;
+    height: 26px;
   }
+
+  .secondary-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .play-btn {
+    width: 36px;
+    height: 36px;
+    margin: 0 1px;
+  }
+
+  .play-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+
   .prev-btn,
   .next-btn {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
+
+  .prev-btn svg,
+  .next-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
   .playlist-toggle-btn {
-    padding: 4px 8px;
-    height: 30px;
+    padding: 3px 6px;
+    height: 28px;
+    gap: 3px;
+  }
+
+  .playlist-toggle-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .playlist-count-tag {
+    font-size: 0.7rem;
   }
 }

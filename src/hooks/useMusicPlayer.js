@@ -161,6 +161,8 @@ export function useMusicPlayer(songs = []) {
       setIsBuffering(false);
       setPlayerError(null);
     } else if (stateCode === 2) {
+      // PROPERLY SYNC PAUSED STATE (e.g. from notification controls or headphone buttons)
+      setIsPlaying(false);
       setIsBuffering(false);
     } else if (stateCode === 3) {
       setIsBuffering(true);
@@ -191,6 +193,81 @@ export function useMusicPlayer(songs = []) {
       setPlayerError(null);
     }, 3000);
   }, []);
+
+  // Synchronize Web Media Session API (Lockscreen, Notification & Bluetooth/Headphone controls)
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    if (currentSong) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: currentSong.title || 'Chai Adda',
+          artist: currentSong.artist || 'Curated Classics',
+          album: `Chai Adda (${currentSong.year || 'Retro'})`,
+          artwork: [
+            {
+              src: currentSong.artwork_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80',
+              sizes: '300x300',
+              type: 'image/jpeg'
+            },
+            {
+              src: currentSong.artwork_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=512&q=80',
+              sizes: '512x512',
+              type: 'image/jpeg'
+            }
+          ]
+        });
+      } catch (e) {}
+    }
+
+    const actionHandlers = [
+      ['play', () => play()],
+      ['pause', () => pause()],
+      ['previoustrack', () => prev()],
+      ['nexttrack', () => next()],
+      ['seekto', (details) => {
+        if (details.seekTime !== undefined) {
+          seek(details.seekTime);
+        }
+      }]
+    ];
+
+    for (const [action, handler] of actionHandlers) {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler);
+      } catch (e) {}
+    }
+
+    return () => {
+      for (const [action] of actionHandlers) {
+        try {
+          navigator.mediaSession.setActionHandler(action, null);
+        } catch (e) {}
+      }
+    };
+  }, [currentSong, play, pause, prev, next, seek]);
+
+  // Synchronize Playback State with OS Media Controls
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    } catch (e) {}
+  }, [isPlaying]);
+
+  // Synchronize Position State with OS Media Controls
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    if (duration > 0 && !isNaN(currentTime) && !isNaN(duration)) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: Math.max(0, duration),
+          playbackRate: 1,
+          position: Math.min(duration, Math.max(0, currentTime))
+        });
+      } catch (e) {}
+    }
+  }, [currentTime, duration]);
 
   return {
     currentSong,

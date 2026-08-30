@@ -5,7 +5,8 @@ import './AudioEngine.css';
 /**
  * Universal AudioEngine
  * Seamlessly supports both direct audio streams (MP3/AAC from Supabase Storage / Cloud)
- * and YouTube embeds, with guaranteed 0:00 start on song change and zero spurious skipping.
+ * and YouTube embeds, with guaranteed 0:00 start on song change, background auto-continuation,
+ * and bidirectional OS media session synchronization.
  */
 export function AudioEngine({
   currentSong,
@@ -55,16 +56,22 @@ export function AudioEngine({
         if (onTimeUpdate) onTimeUpdate(0, 0);
 
         if (isPlaying) {
-          audio.play().catch((err) => {
-            console.warn('Audio auto-play waiting for user interaction/buffering:', err);
-          });
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err) => {
+              console.warn('Audio play notice (waiting for buffer/user gesture):', err);
+            });
+          }
         }
       } else {
         // Toggle play/pause on same song
         if (isPlaying && audio.paused) {
-          audio.play().catch((err) => {
-            console.warn('Audio play error:', err);
-          });
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err) => {
+              console.warn('Audio play error:', err);
+            });
+          }
         } else if (!isPlaying && !audio.paused) {
           audio.pause();
         }
@@ -86,6 +93,23 @@ export function AudioEngine({
       audioRef.current.volume = isMuted ? 0 : volume / 100;
     }
   }, [volume, isMuted, isDirectAudio]);
+
+  // Background continuity: When audio data can play through, ensure continuous playback if isPlaying
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleCanPlay = () => {
+      if (isPlayingRef.current && audio.paused) {
+        audio.play().catch(() => {});
+      }
+    };
+
+    audio.addEventListener('canplay', handleCanPlay);
+    return () => {
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+  }, []);
 
   // 2. YouTube IFrame Player Handling (Only when no audio_url)
   useEffect(() => {
@@ -236,6 +260,8 @@ export function AudioEngine({
       <audio
         ref={audioRef}
         preload="auto"
+        playsInline
+        crossOrigin="anonymous"
         onLoadedMetadata={() => {
           if (isDirectAudio && audioRef.current && onTimeUpdate) {
             onTimeUpdate(0, audioRef.current.duration || 0);
@@ -250,6 +276,9 @@ export function AudioEngine({
         onPlaying={() => {
           if (isDirectAudio && onStateChange) onStateChange(1); // 1 = playing
         }}
+        onPlay={() => {
+          if (isDirectAudio && onStateChange) onStateChange(1); // 1 = playing
+        }}
         onPause={() => {
           if (isDirectAudio && onStateChange) onStateChange(2); // 2 = paused
         }}
@@ -258,7 +287,7 @@ export function AudioEngine({
         }}
         onError={(e) => {
           if (isDirectAudio && currentSong?.audio_url) {
-            console.warn('Audio stream error on file:', currentSong.title, e);
+            console.warn('Audio stream notice on file:', currentSong.title, e);
           }
         }}
       />
