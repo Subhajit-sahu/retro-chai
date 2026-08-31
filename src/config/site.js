@@ -11,7 +11,7 @@ export const SITE_CONFIG = {
 };
 
 export const DEFAULT_EXTERNAL_LINKS = {
-  spotify: 'https://open.spotify.com/playlist/37i9dQZF1DX0XUfTFmNBRM',
+  spotify: 'https://open.spotify.com/playlist/0QQDGHf91F5mpz00mgshK1?si=bKA1QbXXRjG-kft-ZVXNcw&utm_source=copy-link&pi=K0paCCwrRDy6_',
   youtubeMusic: 'https://music.youtube.com/playlist?list=RDCLAK5uy_kQyD5Ld0H71wM'
 };
 

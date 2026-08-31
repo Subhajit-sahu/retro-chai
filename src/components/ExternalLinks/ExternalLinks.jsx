@@ -2,7 +2,7 @@ import React from 'react';
 import './ExternalLinks.css';
 
 export function ExternalLinks({ links, onOpenAdmin }) {
-  const spotifyUrl = links?.spotify || 'https://open.spotify.com';
+  const spotifyUrl = links?.spotify || 'https://open.spotify.com/playlist/0QQDGHf91F5mpz00mgshK1?si=bKA1QbXXRjG-kft-ZVXNcw&utm_source=copy-link&pi=K0paCCwrRDy6_';
   const ytMusicUrl = links?.youtubeMusic || 'https://music.youtube.com';
 
   return (
